@@ -10,6 +10,7 @@ if (!isTeacherLoggedIn()) {
 $teacher_id = $_SESSION['user_id'];
 $message = '';
 $error = '';
+$skipped = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     $file = $_FILES['csv_file']['tmp_name'];
@@ -17,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     if (($handle = fopen($file, 'r')) !== false) {
         $header = fgetcsv($handle, 0, ",", '"', "\\"); 
         $inserted = 0;
+
+        $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM tests.questions WHERE question_text = :text");
 
         while (($row = fgetcsv($handle, 0, ",", '"', "\\")) !== false) {
             $question_text = trim($row[0] ?? '');
@@ -26,10 +29,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 continue;
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO tests.questions (question_text, question_type, created_by)
-                VALUES (:text, :type, :uid) RETURNING id
-            ");
+            $stmtCheck->execute(['text' => $question_text]);
+            if ($stmtCheck->fetchColumn() > 0) {
+                $skipped[] = $question_text;
+                continue;
+            }
+
+            $stmt = $pdo->prepare(
+                "INSERT INTO tests.questions (question_text, question_type, created_by)
+                 VALUES (:text, :type, :uid) RETURNING id"
+            );
             $stmt->execute([
                 'text' => $question_text,
                 'type' => $question_type,
@@ -70,6 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
         fclose($handle);
         $message = "Импортировано вопросов: $inserted";
+        if (!empty($skipped)) {
+            $message .= ". Пропущено дубликатов: " . count($skipped);
+        }
     } else {
         $error = 'Не удалось прочитать файл.';
     }
@@ -91,6 +103,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         <p style="color:green"><?= htmlspecialchars($message) ?></p>
     <?php elseif ($error): ?>
         <p style="color:red"><?= htmlspecialchars($error) ?></p>
+    <?php endif; ?>
+
+    <?php if (!empty($skipped)): ?>
+        <div style="background:#fff3cd;padding:10px;border:1px solid #ffeeba;margin-top:10px;">
+            <strong>Пропущенные дубликаты:</strong>
+            <ul>
+                <?php foreach ($skipped as $q): ?>
+                    <li><?= htmlspecialchars($q) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endif; ?>
 
     <form method="POST" enctype="multipart/form-data">
