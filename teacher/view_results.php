@@ -8,28 +8,12 @@ if (!isTeacherLoggedIn()) {
 }
 
 $questionCounts = [];
-$stmt = $pdo->query("
-    SELECT test_id, COUNT(*) AS total
-    FROM tests.test_questions
-    GROUP BY test_id
-");
+$stmt = $pdo->query("SELECT test_id, COUNT(*) AS total FROM tests.test_questions GROUP BY test_id");
 foreach ($stmt->fetchAll() as $row) {
     $questionCounts[$row['test_id']] = $row['total'];
 }
 
-$stmt = $pdo->query("
-    SELECT 
-        r.login_id,
-        s.login AS student_login,
-        r.score,
-        r.test_id,
-        t.test_name,
-        r.created_at
-    FROM tests.results r
-    JOIN tests.tests t ON r.test_id = t.id
-    JOIN tests.student_logins s ON r.login_id = s.id
-    ORDER BY r.test_id, r.score DESC
-");
+$stmt = $pdo->query("SELECT r.id AS result_id, r.login_id, s.login AS student_login, r.score, r.test_id, t.test_name, r.created_at FROM tests.results r JOIN tests.tests t ON r.test_id = t.id JOIN tests.student_logins s ON r.login_id = s.id ORDER BY r.test_id, r.score DESC");
 $results = $stmt->fetchAll();
 ?>
 
@@ -53,6 +37,7 @@ $results = $stmt->fetchAll();
                 <th>Правильных</th>
                 <th>Процент</th>
                 <th>Дата</th>
+                <th>Действие</th>
             </tr>
             <?php foreach ($results as $r): 
                 $total = $questionCounts[$r['test_id']] ?? 1;
@@ -64,6 +49,7 @@ $results = $stmt->fetchAll();
                     <td><?= $r['score'] ?> / <?= $total ?></td>
                     <td><?= $percent ?>%</td>
                     <td><?= htmlspecialchars($r['created_at']) ?></td>
+                    <td><a href="view_result_details.php?result_id=<?= $r['result_id'] ?>">Подробнее</a></td>
                 </tr>
             <?php endforeach; ?>
         </table>

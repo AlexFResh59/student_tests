@@ -10,14 +10,7 @@ if (!isStudentLoggedIn()) {
 $student_id = $_SESSION['student_id'];
 $test_id = $_SESSION['test_id'];
 
-$stmt = $pdo->prepare("
-    SELECT q.id AS qid, q.question_type, o.id AS oid, o.is_correct, ta.correct_text
-    FROM tests.test_questions tq
-    JOIN tests.questions q ON tq.question_id = q.id
-    LEFT JOIN tests.options o ON o.question_id = q.id
-    LEFT JOIN tests.text_answers ta ON ta.question_id = q.id
-    WHERE tq.test_id = :tid
-");
+$stmt = $pdo->prepare("SELECT q.id AS qid, q.question_type, o.id AS oid, o.is_correct, ta.correct_text FROM tests.test_questions tq JOIN tests.questions q ON tq.question_id = q.id LEFT JOIN tests.options o ON o.question_id = q.id LEFT JOIN tests.text_answers ta ON ta.question_id = q.id WHERE tq.test_id = :tid");
 $stmt->execute(['tid' => $test_id]);
 
 $question_map = [];
@@ -67,10 +60,7 @@ foreach ($question_map as $qid => $q) {
     }
 }
 
-$stmt = $pdo->prepare("
-    INSERT INTO tests.results (login_id, test_id, score)
-    VALUES (:sid, :tid, :score) RETURNING id
-");
+$stmt = $pdo->prepare("INSERT INTO tests.results (login_id, test_id, score) VALUES (:sid, :tid, :score) RETURNING id");
 $stmt->execute([
     'sid' => $student_id,
     'tid' => $test_id,
@@ -78,11 +68,7 @@ $stmt->execute([
 ]);
 $result_id = $stmt->fetchColumn();
 
-$stmt = $pdo->prepare("
-    INSERT INTO tests.answers (result_id, question_id, option_id)
-    VALUES (:rid, :qid, :oid)
-");
-
+$stmt = $pdo->prepare("INSERT INTO tests.answers (result_id, question_id, option_id) VALUES (:rid, :qid, :oid)");
 foreach ($answers as $qid => $oids) {
     if (!is_array($oids)) $oids = [$oids]; 
     foreach ($oids as $oid) {
@@ -90,6 +76,17 @@ foreach ($answers as $qid => $oids) {
             'rid' => $result_id,
             'qid' => $qid,
             'oid' => $oid
+        ]);
+    }
+}
+
+if (!empty($text_answers)) {
+    $stmt = $pdo->prepare("INSERT INTO tests.text_user_answers (result_id, question_id, student_text) VALUES (:rid, :qid, :text)");
+    foreach ($text_answers as $qid => $text) {
+        $stmt->execute([
+            'rid' => $result_id,
+            'qid' => $qid,
+            'text' => trim($text)
         ]);
     }
 }
