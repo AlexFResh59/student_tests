@@ -29,7 +29,7 @@ ALTER SCHEMA tests OWNER TO student_test;
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
 --
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA tests;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
@@ -124,7 +124,8 @@ CREATE TABLE tests.questions (
     question_text text NOT NULL,
     question_type character varying(10) NOT NULL,
     created_by integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    exported boolean DEFAULT false
 );
 
 
@@ -309,6 +310,19 @@ ALTER SEQUENCE tests.text_answers_id_seq OWNED BY tests.text_answers.id;
 
 
 --
+-- Name: text_user_answers; Type: TABLE; Schema: tests; Owner: student_test
+--
+
+CREATE TABLE tests.text_user_answers (
+    result_id integer NOT NULL,
+    question_id integer NOT NULL,
+    student_text text
+);
+
+
+ALTER TABLE tests.text_user_answers OWNER TO student_test;
+
+--
 -- Name: users; Type: TABLE; Schema: tests; Owner: student_test
 --
 
@@ -405,6 +419,45 @@ ALTER TABLE ONLY tests.users ALTER COLUMN id SET DEFAULT nextval('tests.users_id
 --
 
 COPY tests.answers (id, result_id, question_id, option_id) FROM stdin;
+97	13	89	160
+98	13	90	165
+99	13	91	168
+100	13	92	174
+101	13	93	176
+102	13	94	180
+103	13	94	182
+104	13	95	184
+105	13	95	185
+106	13	95	186
+107	13	96	188
+108	13	96	190
+109	13	97	192
+110	13	97	194
+111	13	98	196
+112	13	98	197
+113	13	104	201
+114	13	105	204
+115	13	105	205
+116	13	105	206
+117	14	89	160
+118	14	90	164
+119	14	91	168
+120	14	92	174
+121	14	93	177
+122	14	94	180
+123	14	95	184
+124	14	95	185
+125	14	96	188
+126	14	96	190
+127	14	97	192
+128	14	97	194
+129	14	98	196
+130	14	98	197
+131	14	98	199
+132	14	104	200
+133	14	105	204
+134	14	105	205
+135	14	105	206
 \.
 
 
@@ -413,6 +466,54 @@ COPY tests.answers (id, result_id, question_id, option_id) FROM stdin;
 --
 
 COPY tests.options (id, question_id, option_text, is_correct) FROM stdin;
+160	89	Париж	t
+161	89	Лондон	f
+162	89	Берлин	f
+163	89	Мадрид	f
+164	90	3	f
+165	90	4	t
+166	90	5	f
+167	90	22	f
+168	91	Синий	t
+169	91	Зеленый	f
+170	91	Красный	f
+171	91	Фиолетовый	f
+172	92	5	f
+173	92	6	f
+174	92	7	t
+175	92	8	f
+176	93	Москва	t
+177	93	Питер	f
+178	93	Киев	f
+179	93	Минск	f
+180	94	Python	t
+181	94	HTML	f
+182	94	Java	t
+183	94	CSS	f
+184	95	Белый	t
+185	95	Красный	t
+186	95	Синий	t
+187	95	Зеленый	f
+188	96	Яблоко	t
+189	96	Морковь	f
+190	96	Банан	t
+191	96	Капуста	f
+192	97	Кошка	t
+193	97	Акула	f
+194	97	Собака	t
+195	97	Черепаха	f
+196	98	Chrome	t
+197	98	Firefox	t
+198	98	Excel	f
+199	98	Edge	t
+200	104	Python	f
+201	104	JavaScript	t
+202	104	Ruby	f
+203	104	Java	f
+204	105	Земля	t
+205	105	Марс	t
+206	105	Юпитер	t
+207	105	Плутон	f
 \.
 
 
@@ -420,7 +521,25 @@ COPY tests.options (id, question_id, option_text, is_correct) FROM stdin;
 -- Data for Name: questions; Type: TABLE DATA; Schema: tests; Owner: student_test
 --
 
-COPY tests.questions (id, question_text, question_type, created_by, created_at) FROM stdin;
+COPY tests.questions (id, question_text, question_type, created_by, created_at, exported) FROM stdin;
+89	Столица Франции?	single	1	2025-04-16 14:23:17.82757	t
+90	2 + 2 = ?	single	1	2025-04-16 14:23:17.838532	t
+91	Цвет неба днем?	single	1	2025-04-16 14:23:17.842537	t
+92	Сколько дней в неделе?	single	1	2025-04-16 14:23:17.846557	t
+93	Столица России?	single	1	2025-04-16 14:23:17.850055	t
+94	Выберите языки программирования	multiple	1	2025-04-16 14:23:17.853979	t
+95	Выберите цвета флага РФ	multiple	1	2025-04-16 14:23:17.856689	t
+96	Что относится к фруктам?	multiple	1	2025-04-16 14:23:17.858941	t
+97	Какие животные млекопитающие?	multiple	1	2025-04-16 14:23:17.861785	t
+98	Выберите браузеры	multiple	1	2025-04-16 14:23:17.86555	t
+99	Какой язык ты изучаешь?	text	1	2025-04-16 14:23:17.868253	t
+100	Год начала Второй мировой войны?	text	1	2025-04-16 14:23:17.87073	t
+101	Название компании создателя Windows?	text	1	2025-04-16 14:23:17.871828	t
+102	Сколько будет 10 в квадрате?	text	1	2025-04-16 14:23:17.872888	t
+103	Что пьет корова?	text	1	2025-04-16 14:23:17.874372	t
+104	Какой язык программирования используется для веб-разработки?	single	1	2025-04-16 14:41:41.690132	t
+105	Назовите планеты солнечной системы	multiple	1	2025-04-16 14:41:41.703201	t
+106	Какова формула углекислого газа?	text	1	2025-04-16 14:41:41.705723	t
 \.
 
 
@@ -429,6 +548,8 @@ COPY tests.questions (id, question_text, question_type, created_by, created_at) 
 --
 
 COPY tests.results (id, login_id, test_id, score, created_at) FROM stdin;
+13	21	17	17	2025-04-16 15:07:44.360176
+14	22	17	13	2025-04-16 15:23:10.872049
 \.
 
 
@@ -437,6 +558,8 @@ COPY tests.results (id, login_id, test_id, score, created_at) FROM stdin;
 --
 
 COPY tests.student_logins (id, login, password, test_id) FROM stdin;
+21	stued20fd	$2y$12$DLLQHx2nz.yv9dT4XthrRu1BtTaHwhqbSINCh/Q.xRhmcoRSQ.eda	17
+22	studb19ec	$2y$12$aZis4WPtG8.CVcaZqjRlwuqMMgaKcxE2ZuV8NCrXvQGC7LognGaQi	17
 \.
 
 
@@ -445,6 +568,24 @@ COPY tests.student_logins (id, login, password, test_id) FROM stdin;
 --
 
 COPY tests.test_questions (test_id, question_id) FROM stdin;
+17	89
+17	90
+17	91
+17	92
+17	93
+17	94
+17	95
+17	96
+17	97
+17	98
+17	99
+17	100
+17	101
+17	102
+17	103
+17	104
+17	105
+17	106
 \.
 
 
@@ -453,6 +594,7 @@ COPY tests.test_questions (test_id, question_id) FROM stdin;
 --
 
 COPY tests.tests (id, test_name, created_by, created_at) FROM stdin;
+17	Тест	1	2025-04-16 15:05:36.034857
 \.
 
 
@@ -461,6 +603,26 @@ COPY tests.tests (id, test_name, created_by, created_at) FROM stdin;
 --
 
 COPY tests.text_answers (id, question_id, correct_text) FROM stdin;
+13	99	php
+14	100	1939
+15	101	microsoft
+16	102	100
+17	103	вода
+18	106	CO2
+\.
+
+
+--
+-- Data for Name: text_user_answers; Type: TABLE DATA; Schema: tests; Owner: student_test
+--
+
+COPY tests.text_user_answers (result_id, question_id, student_text) FROM stdin;
+14	99	php
+14	100	1939
+14	101	microsoft
+14	102	100
+14	103	вода
+14	106	CO2
 \.
 
 
@@ -477,49 +639,49 @@ COPY tests.users (id, login, password, created_at) FROM stdin;
 -- Name: answers_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.answers_id_seq', 23, true);
+SELECT pg_catalog.setval('tests.answers_id_seq', 135, true);
 
 
 --
 -- Name: options_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.options_id_seq', 39, true);
+SELECT pg_catalog.setval('tests.options_id_seq', 215, true);
 
 
 --
 -- Name: questions_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.questions_id_seq', 13, true);
+SELECT pg_catalog.setval('tests.questions_id_seq', 109, true);
 
 
 --
 -- Name: results_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.results_id_seq', 7, true);
+SELECT pg_catalog.setval('tests.results_id_seq', 14, true);
 
 
 --
 -- Name: student_logins_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.student_logins_id_seq', 10, true);
+SELECT pg_catalog.setval('tests.student_logins_id_seq', 22, true);
 
 
 --
 -- Name: tests_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.tests_id_seq', 4, true);
+SELECT pg_catalog.setval('tests.tests_id_seq', 20, true);
 
 
 --
 -- Name: text_answers_id_seq; Type: SEQUENCE SET; Schema: tests; Owner: student_test
 --
 
-SELECT pg_catalog.setval('tests.text_answers_id_seq', 2, true);
+SELECT pg_catalog.setval('tests.text_answers_id_seq', 19, true);
 
 
 --
@@ -599,6 +761,22 @@ ALTER TABLE ONLY tests.tests
 
 ALTER TABLE ONLY tests.text_answers
     ADD CONSTRAINT text_answers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: text_user_answers text_user_answers_pkey; Type: CONSTRAINT; Schema: tests; Owner: student_test
+--
+
+ALTER TABLE ONLY tests.text_user_answers
+    ADD CONSTRAINT text_user_answers_pkey PRIMARY KEY (result_id, question_id);
+
+
+--
+-- Name: questions unique_question_text; Type: CONSTRAINT; Schema: tests; Owner: student_test
+--
+
+ALTER TABLE ONLY tests.questions
+    ADD CONSTRAINT unique_question_text UNIQUE (question_text);
 
 
 --
@@ -711,6 +889,22 @@ ALTER TABLE ONLY tests.tests
 
 ALTER TABLE ONLY tests.text_answers
     ADD CONSTRAINT text_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES tests.questions(id) ON DELETE CASCADE;
+
+
+--
+-- Name: text_user_answers text_user_answers_question_id_fkey; Type: FK CONSTRAINT; Schema: tests; Owner: student_test
+--
+
+ALTER TABLE ONLY tests.text_user_answers
+    ADD CONSTRAINT text_user_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES tests.questions(id) ON DELETE CASCADE;
+
+
+--
+-- Name: text_user_answers text_user_answers_result_id_fkey; Type: FK CONSTRAINT; Schema: tests; Owner: student_test
+--
+
+ALTER TABLE ONLY tests.text_user_answers
+    ADD CONSTRAINT text_user_answers_result_id_fkey FOREIGN KEY (result_id) REFERENCES tests.results(id) ON DELETE CASCADE;
 
 
 --
